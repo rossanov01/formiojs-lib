@@ -121,10 +121,28 @@ function () {
 
     if (options.hasOwnProperty('base')) {
       this.base = options.base;
+      console.log('[Formio] Using base from options:', this.base);
     } else if (Formio.baseUrl) {
       this.base = Formio.baseUrl;
+      console.log('[Formio] Using Formio.baseUrl:', this.base);
     } else {
-      this.base = window.location.href.match(/http[s]?:\/\/api./)[0];
+      // Fix for localhost proxy environments
+      console.log('[Formio] Determining base URL...');
+      console.log('[Formio] Current location:', window.location.href);
+      console.log('[Formio] Current hostname:', window.location.hostname);
+      
+      var apiMatch = window.location.href.match(/http[s]?:\/\/api\./);
+      if (apiMatch) {
+        this.base = apiMatch[0];
+        console.log('[Formio] Found api. pattern, using:', this.base);
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // On localhost, use proxy target
+        this.base = 'http://app-qa.unim.internal';
+        console.log('[Formio] Localhost detected, using proxy target:', this.base);
+      } else {
+        this.base = window.location.origin;
+        console.log('[Formio] Using window.location.origin:', this.base);
+      }
     }
 
     if (!path) {
@@ -268,6 +286,14 @@ function () {
     if (!Formio.projectUrlSet) {
       Formio.projectUrl = this.projectUrl;
     }
+    
+    // Log final configuration
+    console.log('[Formio] Instance created:', {
+      base: this.base,
+      projectUrl: this.projectUrl,
+      formUrl: this.formUrl,
+      path: this.path
+    });
   }
   /* eslint-enable max-statements */
 
